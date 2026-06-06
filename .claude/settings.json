@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const pool = require\\('./src/db'\\); pool.query\\('SELECT count\\(*\\) FROM packages'\\).then\\(r => { console.log\\('Packages in NeonDB:', r.rows[0].count\\); pool.end\\(\\); }\\).catch\\(e => { console.error\\(e.message\\); pool.end\\(\\); }\\);\")",
+      "Bash(git init *)",
+      "Bash(git add *)"
+    ]
+  }
+}

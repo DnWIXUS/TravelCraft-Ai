@@ -1,0 +1,294 @@
+import { useEffect, useState } from "react";
+import { useNavigate, useParams, Link } from "react-router";
+import { useTranslation } from "react-i18next";
+import { CalendarDays, CheckCircle2, ArrowLeft, Star } from "lucide-react";
+import { getPackageBySlug, PackageType } from "../data/packages";
+
+interface BookingItem {
+  id: number;
+  type: "domestic" | "international";
+  title: string;
+  price: number;
+  name: string;
+  phone: string;
+  guests: number;
+  bookedAt: string;
+}
+
+export function PackageDetailPage() {
+  const params = useParams();
+  const navigate = useNavigate();
+  const { i18n } = useTranslation();
+  const lang = i18n.language as "uz" | "ru";
+  const [message, setMessage] = useState<string | null>(null);
+  const [packageData, setPackageData] = useState<ReturnType<typeof getPackageBySlug> | null>(null);
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [guests, setGuests] = useState(1);
+  const [existingBooking, setExistingBooking] = useState<BookingItem | null>(null);
+
+  useEffect(() => {
+    if (!params.type || !params.id) return;
+    const type = params.type as PackageType;
+    const id = Number(params.id);
+    const pkg = getPackageBySlug(type, id);
+    setPackageData(pkg ?? null);
+  }, [params.type, params.id]);
+
+  useEffect(() => {
+    if (!packageData) return;
+    const bookings: BookingItem[] = JSON.parse(localStorage.getItem("travelcraft_bookings") || "[]");
+    const match = bookings.find(
+      (item) => item.type === packageData.type && item.id === packageData.id,
+    );
+    if (match) {
+      setExistingBooking(match);
+      setName(match.name);
+      setPhone(match.phone);
+      setGuests(match.guests ?? 1);
+    }
+  }, [packageData]);
+
+  const handleBooking = () => {
+    if (!packageData) return;
+    if (!name.trim() || !phone.trim()) {
+      setMessage("Please enter your name and phone number to complete the booking.");
+      return;
+    }
+
+    const bookings: BookingItem[] = JSON.parse(localStorage.getItem("travelcraft_bookings") || "[]");
+    const existingIndex = bookings.findIndex(
+      (item) => item.type === packageData.type && item.id === packageData.id,
+    );
+    const bookingRecord: BookingItem = {
+      id: packageData.id,
+      type: packageData.type,
+      title: packageData.title,
+      price: packageData.price,
+      name: name.trim(),
+      phone: phone.trim(),
+      guests,
+      bookedAt: new Date().toISOString(),
+    };
+
+    if (existingIndex !== -1) {
+      bookings[existingIndex] = bookingRecord;
+      setMessage("Your booking details were updated successfully.");
+    } else {
+      bookings.push(bookingRecord);
+      setMessage("Your tour has been booked! You can review it in your dashboard.");
+    }
+
+    localStorage.setItem("travelcraft_bookings", JSON.stringify(bookings));
+    setExistingBooking(bookingRecord);
+    setTimeout(() => {
+      navigate("/dashboard");
+    }, 1200);
+  };
+
+  if (!packageData) {
+    return (
+      <div className="container mx-auto px-4 py-20">
+        <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-lg">
+          <h2 className="text-3xl font-bold mb-4">Package not found</h2>
+          <p className="text-slate-600 mb-6">Please select a valid travel package from the list.</p>
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to home
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const localTitle = packageData.translations?.[lang]?.title || packageData.title;
+  const localDescription = packageData.translations?.[lang]?.description || packageData.description;
+  const localVibe = packageData.translations?.[lang]?.vibe || packageData.vibe;
+  const localDuration = packageData.translations?.[lang]?.duration || packageData.duration;
+
+  return (
+    <div className="container mx-auto px-4 py-16">
+      <div className="flex flex-col lg:flex-row gap-8">
+        <div className="lg:w-2/3 rounded-3xl overflow-hidden shadow-xl bg-white">
+          <img src={packageData.image} alt={localTitle} className="w-full h-48 sm:h-72 lg:h-[420px] object-cover" />
+          <div className="p-5 sm:p-8 md:p-10">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-4">
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-slate-500 uppercase tracking-[0.15em] sm:tracking-[0.2em]">
+                  {packageData.type === "domestic" ? "Domestic" : "International"} package
+                </p>
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 leading-tight">{localTitle}</h1>
+              </div>
+              <div className="sm:text-right shrink-0">
+                <p className="text-sm text-slate-500">From</p>
+                <p className="text-3xl sm:text-4xl font-bold text-blue-600">${packageData.price}</p>
+              </div>
+            </div>
+
+            <p className="text-slate-600 leading-relaxed mb-8">{localDescription}</p>
+
+            {localVibe || packageData.video ? (
+              <div className="grid gap-6 mb-8">
+                {localVibe && (
+                  <div className="rounded-3xl border border-slate-200 p-6 bg-slate-50">
+                    <h2 className="text-2xl font-semibold mb-3">Trip vibe</h2>
+                    <p className="text-slate-700 leading-relaxed">{localVibe}</p>
+                  </div>
+                )}
+                {packageData.video && (
+                  <div className="rounded-3xl overflow-hidden shadow-lg bg-black">
+                    <div className="aspect-video">
+                      <iframe
+                        src={packageData.video}
+                        title={`${packageData.title} video`}
+                        className="w-full h-full"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : null}
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              <div className="rounded-3xl border border-slate-200 p-5 bg-slate-50">
+                <p className="text-sm text-slate-500">Duration</p>
+                <p className="mt-3 text-lg font-semibold">{localDuration}</p>
+              </div>
+              {packageData.country && (
+                <div className="rounded-3xl border border-slate-200 p-5 bg-slate-50">
+                  <p className="text-sm text-slate-500">Destination</p>
+                  <p className="mt-3 text-lg font-semibold">{packageData.country}</p>
+                </div>
+              )}
+              {packageData.hotel && (
+                <div className="rounded-3xl border border-slate-200 p-5 bg-slate-50">
+                  <p className="text-sm text-slate-500">Hotel</p>
+                  <p className="mt-3 text-lg font-semibold">{packageData.hotel}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+              {packageData.included.map((item) => (
+                <div key={item} className="rounded-3xl border border-slate-200 p-5 flex items-center gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-green-600" />
+                  <span className="text-slate-700">{item}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="rounded-3xl border border-slate-200 p-8 bg-gradient-to-br from-blue-600 to-purple-600 text-white">
+              <div className="flex flex-col gap-4 md:flex-row items-start justify-between mb-4">
+                <div>
+                  <p className="text-sm opacity-80">Booking includes instant confirmation</p>
+                  <p className="text-2xl font-bold">Reserve your spot today</p>
+                </div>
+                <div className="flex items-center gap-2 text-lg">
+                  <Star className="w-5 h-5 text-yellow-300" />
+                  <span>{packageData.rating}</span>
+                </div>
+              </div>
+
+              <div className="grid gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <label className="flex flex-col gap-2 text-sm">
+                    Your name
+                    <input
+                      value={name}
+                      onChange={(event) => setName(event.target.value)}
+                      placeholder="Name"
+                      className="rounded-2xl border border-white/30 bg-white/10 px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-white"
+                    />
+                  </label>
+
+                  <label className="flex flex-col gap-2 text-sm">
+                    Phone number
+                    <input
+                      value={phone}
+                      onChange={(event) => setPhone(event.target.value)}
+                      placeholder="+998 90 123 45 67"
+                      className="rounded-2xl border border-white/30 bg-white/10 px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-white"
+                    />
+                  </label>
+                </div>
+
+                <label className="flex flex-col gap-2 text-sm max-w-sm">
+                  Guests
+                  <input
+                    type="number"
+                    min={1}
+                    value={guests}
+                    onChange={(event) => setGuests(Number(event.target.value))}
+                    className="rounded-2xl border border-white/30 bg-white/10 px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-white"
+                  />
+                </label>
+
+                <div className="rounded-3xl border border-white/20 bg-white/10 p-4 text-sm text-white/90">
+                  <p className="font-semibold">Booking details</p>
+                  <p className="mt-2">Provide your name and phone so our team can confirm the reservation and reach you faster.</p>
+                </div>
+              </div>
+
+              <button
+                onClick={handleBooking}
+                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-3xl bg-white text-blue-600 px-8 py-4 font-semibold shadow-lg hover:bg-slate-100 transition md:w-auto"
+              >
+                <CalendarDays className="w-5 h-5" />
+                {existingBooking ? "Update Booking" : "Book This Tour"}
+              </button>
+              {message && <p className="mt-4 text-sm text-white/90">{message}</p>}
+            </div>
+          </div>
+        </div>
+
+        <aside className="lg:w-1/3 space-y-6">
+          <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-lg">
+            <h2 className="text-xl font-bold mb-4">Need help?</h2>
+            <p className="text-slate-600 mb-4">
+              Contact our support team to customize your trip, add extra nights, or arrange private airport transfer.
+            </p>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 text-slate-700">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-700">+998</span>
+                <div>
+                  <p className="font-semibold">Phone</p>
+                  <p className="text-sm text-slate-500">+998 XX XXX XX XX</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 text-slate-700">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-purple-50 text-purple-700">✉</span>
+                <div>
+                  <p className="font-semibold">Email</p>
+                  <p className="text-sm text-slate-500">support@travelcraft.ai</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-lg">
+            <h2 className="text-xl font-bold mb-4">Quick links</h2>
+            <div className="space-y-3">
+              <Link
+                to="/dashboard"
+                className="block rounded-2xl bg-blue-600 px-4 py-3 text-white text-center hover:bg-blue-700 transition"
+              >
+                Open your dashboard
+              </Link>
+              <button
+                onClick={() => navigate(-1)}
+                className="w-full rounded-2xl border border-slate-200 px-4 py-3 hover:bg-slate-50 transition"
+              >
+                Back to packages
+              </button>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+}
