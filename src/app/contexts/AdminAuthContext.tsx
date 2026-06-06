@@ -25,7 +25,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [user]);
 
   const login = async (email: string, password: string) => {
-    const res = await fetch(`${window.location.protocol}//${window.location.hostname}:4000/api/admin/auth/login`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/auth/login`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password })
     });
     if (!res.ok) {

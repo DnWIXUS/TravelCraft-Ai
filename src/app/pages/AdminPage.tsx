@@ -6,7 +6,7 @@ export function AdminPage() {
   const [packages, setPackages] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
   const [form, setForm] = useState({ title: "", type: "domestic", price: "", description: "", image: "" });
-  const api = (path: string) => `${window.location.protocol}//${window.location.hostname}:4000/api${path}`;
+  const api = (path: string) => `${import.meta.env.VITE_API_URL || ''}/api${path}`;
 
   const fetchData = async () => {
     try {
