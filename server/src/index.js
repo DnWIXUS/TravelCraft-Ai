@@ -3,14 +3,11 @@ const express = require('express');
 const cors = require('cors');
 const https = require('https');
 const http = require('http');
-const bcrypt = require('bcryptjs');
 const pool = require('./db');
 
 const { getPackages, createPackage } = require('./controllers/packagesController');
 const { getBookings, createBooking, updateBooking } = require('./controllers/bookingsController');
 const { enrichCountry } = require('./controllers/enrichController');
-const adminAuthRoutes = require('./routes/admin/auth');
-const adminDashboardRoutes = require('./routes/admin/dashboard');
 
 const app = express();
 app.use(cors());
@@ -26,8 +23,16 @@ app.get('/api/bookings', getBookings);
 app.post('/api/bookings', createBooking);
 app.put('/api/bookings/:id', updateBooking);
 
-app.use('/api/admin/auth', adminAuthRoutes);
-app.use('/api/admin', adminDashboardRoutes);
+// Admin routes loaded in try-catch so a missing package never blocks port binding
+try {
+  const adminAuthRoutes = require('./routes/admin/auth');
+  const adminDashboardRoutes = require('./routes/admin/dashboard');
+  app.use('/api/admin/auth', adminAuthRoutes);
+  app.use('/api/admin', adminDashboardRoutes);
+  console.log('Admin routes loaded.');
+} catch (err) {
+  console.error('Admin routes failed to load:', err.message);
+}
 
 const PORT = process.env.PORT || 8080;
 
@@ -41,6 +46,7 @@ function keepAlive(url) {
 }
 
 async function setupDatabase() {
+  const bcrypt = require('bcryptjs'); // lazy — only runs after port is open
   const client = await pool.connect();
   try {
     await client.query(`
@@ -108,6 +114,7 @@ async function setupDatabase() {
   }
 }
 
+// Port ALWAYS opens first — DB setup runs in background after
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on 0.0.0.0:${PORT}`);
 
