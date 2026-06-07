@@ -38,8 +38,8 @@ async function start() {
   try {
     await pool.query('SELECT 1');
     console.log('NeonDB connected');
-    app.listen(port, () => {
-      console.log(`Server running on port ${port}`);
+    app.listen(port, '0.0.0.0', () => {
+      console.log(`Server running on 0.0.0.0:${port}`);
 
       const selfUrl = process.env.RENDER_EXTERNAL_URL
         ? `${process.env.RENDER_EXTERNAL_URL}/api/health`
