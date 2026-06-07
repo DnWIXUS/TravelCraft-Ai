@@ -8,7 +8,10 @@
       "Bash(git remote *)",
       "Bash(git branch *)",
       "Bash(git push *)",
-      "Bash(npm ls *)"
+      "Bash(npm ls *)",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "Bash(powershell -Command \"git -C 'c:\\\\Users\\\\Ika85\\\\Desktop\\\\TravelCraft AI Homepage Design' add -A; git -C 'c:\\\\Users\\\\Ika85\\\\Desktop\\\\TravelCraft AI Homepage Design' push\")"
     ]
   }
 }

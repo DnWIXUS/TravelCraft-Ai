@@ -23,7 +23,7 @@ app.get('/api/bookings', getBookings);
 app.post('/api/bookings', createBooking);
 app.put('/api/bookings/:id', updateBooking);
 
-const port = process.env.PORT || 8080;
+const PORT = process.env.PORT || 8080;
 
 function keepAlive(url) {
   const client = url.startsWith('https') ? https : http;
@@ -34,24 +34,18 @@ function keepAlive(url) {
   });
 }
 
-async function start() {
-  try {
-    await pool.query('SELECT 1');
-    console.log('NeonDB connected');
-    app.listen(port, '0.0.0.0', () => {
-      console.log(`Server running on 0.0.0.0:${port}`);
+// Portni darhol ochamiz — Render port scan qilgunga qadar tayyor bo'ladi
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on 0.0.0.0:${PORT}`);
 
-      const selfUrl = process.env.RENDER_EXTERNAL_URL
-        ? `${process.env.RENDER_EXTERNAL_URL}/api/health`
-        : `http://localhost:${port}/api/health`;
+  const selfUrl = process.env.RENDER_EXTERNAL_URL
+    ? `${process.env.RENDER_EXTERNAL_URL}/api/health`
+    : `http://localhost:${PORT}/api/health`;
 
-      setInterval(() => keepAlive(selfUrl), 10_000);
-      console.log(`[keep-alive] pinging ${selfUrl} every 10s`);
-    });
-  } catch (err) {
-    console.error('Database connection error:', err.message);
-    process.exit(1);
-  }
-}
+  setInterval(() => keepAlive(selfUrl), 10_000);
 
-start();
+  // DB ga ulanishni fon rejimda tekshiramiz
+  pool.query('SELECT 1')
+    .then(() => console.log('NeonDB connected'))
+    .catch(err => console.error('NeonDB connection error:', err.message));
+});
