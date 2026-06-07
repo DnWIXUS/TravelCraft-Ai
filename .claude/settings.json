@@ -1,7 +1,6 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node -e \"const pool = require\\('./src/db'\\); pool.query\\('SELECT count\\(*\\) FROM packages'\\).then\\(r => { console.log\\('Packages in NeonDB:', r.rows[0].count\\); pool.end\\(\\); }\\).catch\\(e => { console.error\\(e.message\\); pool.end\\(\\); }\\);\")",
       "Bash(git init *)",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
@@ -9,9 +8,25 @@
       "Bash(git branch *)",
       "Bash(git push *)",
       "Bash(npm ls *)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
       "Skill(update-config)",
-      "Skill(update-config:*)",
-      "Bash(powershell -Command \"git -C 'c:\\\\Users\\\\Ika85\\\\Desktop\\\\TravelCraft AI Homepage Design' add -A; git -C 'c:\\\\Users\\\\Ika85\\\\Desktop\\\\TravelCraft AI Homepage Design' push\")"
+      "Skill(update-config:*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "git -C \"c:/Users/Ika85/Desktop/TravelCraft AI Homepage Design\" add -A && git -C \"c:/Users/Ika85/Desktop/TravelCraft AI Homepage Design\" diff --cached --quiet || git -C \"c:/Users/Ika85/Desktop/TravelCraft AI Homepage Design\" commit -m \"auto: save changes\" && git -C \"c:/Users/Ika85/Desktop/TravelCraft AI Homepage Design\" push origin main 2>/dev/null || true",
+            "async": true,
+            "statusMessage": "GitHub ga push qilinmoqda..."
+          }
+        ]
+      }
     ]
   }
 }
