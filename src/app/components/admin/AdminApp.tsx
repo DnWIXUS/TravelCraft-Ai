@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet } from 'react-router';
 import { AdminAuthContext } from '../../contexts/AdminAuthContext';
 import AdminLayout from './AdminLayout';
 import AdminLogin from '../../pages/admin/Login';

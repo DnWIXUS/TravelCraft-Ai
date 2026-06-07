@@ -1,19 +1,22 @@
-const Booking = require('../../models/Booking');
-const Package = require('../../models/Package');
-const User = require('../../models/User');
+const pool = require('../../db');
 
 async function getOverview(req, res) {
   try {
-    const totalBookings = await Booking.countDocuments();
-    const totalPackages = await Package.countDocuments();
-    const totalUsers = await User.countDocuments();
-    const revenueAgg = await Booking.aggregate([
-      { $match: { status: 'accepted' } },
-      { $group: { _id: null, total: { $sum: '$price' } } }
+    const [bookingsResult, packagesResult, usersResult, revenueResult, recentResult] = await Promise.all([
+      pool.query('SELECT COUNT(*) FROM bookings'),
+      pool.query('SELECT COUNT(*) FROM packages'),
+      pool.query('SELECT COUNT(*) FROM users'),
+      pool.query("SELECT COALESCE(SUM(price), 0) AS total FROM bookings WHERE status = 'accepted'"),
+      pool.query('SELECT * FROM bookings ORDER BY booked_at DESC LIMIT 10'),
     ]);
-    const totalRevenue = (revenueAgg[0] && revenueAgg[0].total) || 0;
-    const recentBookings = await Booking.find().sort({ bookedAt: -1 }).limit(10);
-    return res.json({ totalBookings, totalPackages, totalUsers, totalRevenue, recentBookings });
+
+    return res.json({
+      totalBookings: parseInt(bookingsResult.rows[0].count),
+      totalPackages: parseInt(packagesResult.rows[0].count),
+      totalUsers: parseInt(usersResult.rows[0].count),
+      totalRevenue: parseFloat(revenueResult.rows[0].total),
+      recentBookings: recentResult.rows,
+    });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Server error' });

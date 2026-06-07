@@ -13,7 +13,7 @@ services:
     runtime: node
     rootDir: server
     buildCommand: npm install
-    startCommand: npm install && npm start
+    startCommand: npm start
     envVars:
       - key: NODE_VERSION
         value: 20

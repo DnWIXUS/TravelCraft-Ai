@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { AdminAuthContext } from '../../contexts/AdminAuthContext';
 
 export default function AdminLogin() {

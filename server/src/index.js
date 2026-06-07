@@ -3,11 +3,14 @@ const express = require('express');
 const cors = require('cors');
 const https = require('https');
 const http = require('http');
+const bcrypt = require('bcryptjs');
 const pool = require('./db');
 
 const { getPackages, createPackage } = require('./controllers/packagesController');
 const { getBookings, createBooking, updateBooking } = require('./controllers/bookingsController');
 const { enrichCountry } = require('./controllers/enrichController');
+const adminAuthRoutes = require('./routes/admin/auth');
+const adminDashboardRoutes = require('./routes/admin/dashboard');
 
 const app = express();
 app.use(cors());
@@ -23,6 +26,9 @@ app.get('/api/bookings', getBookings);
 app.post('/api/bookings', createBooking);
 app.put('/api/bookings/:id', updateBooking);
 
+app.use('/api/admin/auth', adminAuthRoutes);
+app.use('/api/admin', adminDashboardRoutes);
+
 const PORT = process.env.PORT || 8080;
 
 function keepAlive(url) {
@@ -34,7 +40,74 @@ function keepAlive(url) {
   });
 }
 
-// Portni darhol ochamiz — Render port scan qilgunga qadar tayyor bo'ladi
+async function setupDatabase() {
+  const client = await pool.connect();
+  try {
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS packages (
+        id SERIAL PRIMARY KEY,
+        local_id INTEGER,
+        type VARCHAR(50) NOT NULL DEFAULT 'custom',
+        category VARCHAR(100),
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        image TEXT,
+        duration VARCHAR(100),
+        price NUMERIC(10,2) DEFAULT 0,
+        rating NUMERIC(3,1) DEFAULT 0,
+        included TEXT[],
+        country VARCHAR(100),
+        hotel VARCHAR(255),
+        flight_included BOOLEAN DEFAULT FALSE,
+        vibe TEXT,
+        video TEXT,
+        interests TEXT[],
+        partners TEXT[],
+        translations JSONB,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS bookings (
+        id SERIAL PRIMARY KEY,
+        title VARCHAR(255),
+        type VARCHAR(50),
+        price NUMERIC(10,2),
+        name VARCHAR(255),
+        phone VARCHAR(50),
+        guests INTEGER DEFAULT 1,
+        days INTEGER DEFAULT 1,
+        status VARCHAR(20) DEFAULT 'pending',
+        booked_at TIMESTAMPTZ DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255),
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        role VARCHAR(20) DEFAULT 'user',
+        blocked BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+    console.log('Database tables ready.');
+
+    const adminEmail = (process.env.ADMIN_EMAIL || 'admin@gmail.com').toLowerCase();
+    const adminPassword = process.env.ADMIN_PASSWORD || 'admin@1shu';
+    const { rows } = await client.query('SELECT id FROM users WHERE email = $1', [adminEmail]);
+    if (rows.length === 0) {
+      const hash = await bcrypt.hash(adminPassword, 10);
+      await client.query(
+        `INSERT INTO users (name, email, password_hash, role) VALUES ($1, $2, $3, 'admin')`,
+        ['Admin', adminEmail, hash]
+      );
+      console.log('Admin user created:', adminEmail);
+    }
+  } finally {
+    client.release();
+  }
+}
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on 0.0.0.0:${PORT}`);
 
@@ -44,8 +117,7 @@ app.listen(PORT, '0.0.0.0', () => {
 
   setInterval(() => keepAlive(selfUrl), 10_000);
 
-  // DB ga ulanishni fon rejimda tekshiramiz
-  pool.query('SELECT 1')
-    .then(() => console.log('NeonDB connected'))
-    .catch(err => console.error('NeonDB connection error:', err.message));
+  setupDatabase()
+    .then(() => console.log('NeonDB connected and ready'))
+    .catch(err => console.error('DB setup error:', err.message));
 });

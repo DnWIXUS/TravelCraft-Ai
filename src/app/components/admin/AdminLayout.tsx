@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { Outlet, Link } from 'react-router-dom';
+import { Outlet, Link } from 'react-router';
 import { AdminAuthContext } from '../../contexts/AdminAuthContext';
 
 export default function AdminLayout() {

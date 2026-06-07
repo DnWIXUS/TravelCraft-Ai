@@ -69,14 +69,14 @@ export default function AdminDashboard() {
         {data.recentBookings && data.recentBookings.length > 0 ? (
           <div className="space-y-3">
             {data.recentBookings.map((b: any) => (
-              <div key={b._id} className="p-3 border rounded flex justify-between hover:bg-slate-50">
+              <div key={b.id} className="p-3 border rounded flex justify-between hover:bg-slate-50">
                 <div>
                   <div className="font-medium">{b.title || 'N/A'} — {b.name || 'Unknown'}</div>
                   <div className="text-sm text-slate-500">{b.phone || 'N/A'} • {b.guests || 1} guests</div>
                 </div>
                 <div className="text-right">
                   <div className="text-sm font-medium">${b.price || 0}</div>
-                  <div className="text-xs text-slate-500">{new Date(b.bookedAt).toLocaleDateString()}</div>
+                  <div className="text-xs text-slate-500">{new Date(b.booked_at).toLocaleDateString()}</div>
                 </div>
               </div>
             ))}
