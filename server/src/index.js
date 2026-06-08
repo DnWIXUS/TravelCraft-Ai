@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const https = require('https');
 const http = require('http');
+const path = require('path');
 const pool = require('./db');
 
 const { getPackages, createPackage } = require('./controllers/packagesController');
@@ -117,6 +118,13 @@ async function setupDatabase() {
     client.release();
   }
 }
+
+// Serve built frontend in production
+const distPath = path.join(__dirname, '../../dist');
+app.use(express.static(distPath));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(distPath, 'index.html'));
+});
 
 // Port ALWAYS opens first — DB setup runs in background after
 app.listen(PORT, '0.0.0.0', () => {

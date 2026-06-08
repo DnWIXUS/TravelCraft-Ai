@@ -1,19 +1,9 @@
 services:
   - type: web
-    name: travelcraft-frontend
+    name: travelcraft-ai
     runtime: node
-    buildCommand: npm install && npm run build
-    startCommand: npm start
-    envVars:
-      - key: NODE_VERSION
-        value: 20
-
-  - type: web
-    name: travelcraft-backend
-    runtime: node
-    rootDir: server
-    buildCommand: npm install
-    startCommand: npm start
+    buildCommand: npm install && npm run build && cd server && npm install
+    startCommand: node server/src/index.js
     envVars:
       - key: NODE_VERSION
         value: 20
@@ -24,4 +14,6 @@ services:
       - key: ADMIN_EMAIL
         sync: false
       - key: ADMIN_PASSWORD
+        sync: false
+      - key: DEEPSEEK_API_KEY
         sync: false
