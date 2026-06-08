@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { motion } from "motion/react";
 import {
@@ -17,8 +17,11 @@ import {
 } from "lucide-react";
 
 export function CustomPackagePage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [currentStep, setCurrentStep] = useState(1);
+  const [aiRecommendation, setAiRecommendation] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState("");
   const [formData, setFormData] = useState({
     destination: "",
     destinationType: "",
@@ -313,6 +316,29 @@ export function CustomPackagePage() {
 
   const navigate = useNavigate();
   const totalSteps = 8;
+
+  useEffect(() => {
+    if (currentStep === 8 && !aiRecommendation && !aiLoading) {
+      const API_URL = import.meta.env.VITE_API_URL || '';
+      setAiLoading(true);
+      setAiError("");
+      fetch(`${API_URL}/api/ai/recommend`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...formData, lang: i18n.language }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.recommendation) {
+            setAiRecommendation(data.recommendation);
+          } else {
+            setAiError(data.error || "AI xatosi yuz berdi.");
+          }
+        })
+        .catch(() => setAiError("Serverga ulanishda xato."))
+        .finally(() => setAiLoading(false));
+    }
+  }, [currentStep]);
 
   const calculateDaysAway = (startDate: string, endDate: string) => {
     if (!startDate || !endDate) return null;
@@ -799,9 +825,28 @@ export function CustomPackagePage() {
             <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-8">
               <div className="text-center mb-8">
                 <Sparkles className="w-16 h-16 mx-auto mb-4 text-purple-600" />
-                <p className="text-lg text-slate-600">
-                  {t("customPackage.aiGenerating")}
-                </p>
+                {aiLoading && (
+                  <div className="space-y-2">
+                    <p className="text-lg text-slate-600">{t("customPackage.aiGenerating")}</p>
+                    <div className="flex justify-center gap-1 mt-3">
+                      <span className="w-2 h-2 rounded-full bg-purple-400 animate-bounce [animation-delay:0ms]" />
+                      <span className="w-2 h-2 rounded-full bg-purple-400 animate-bounce [animation-delay:150ms]" />
+                      <span className="w-2 h-2 rounded-full bg-purple-400 animate-bounce [animation-delay:300ms]" />
+                    </div>
+                  </div>
+                )}
+                {aiError && (
+                  <p className="text-sm text-red-500 mt-2">{aiError}</p>
+                )}
+                {aiRecommendation && !aiLoading && (
+                  <div className="text-left bg-white rounded-2xl p-5 border border-purple-100 shadow-sm mt-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Sparkles className="w-4 h-4 text-purple-500" />
+                      <span className="text-sm font-semibold text-purple-600">DeepSeek AI</span>
+                    </div>
+                    <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap">{aiRecommendation}</p>
+                  </div>
+                )}
               </div>
 
               <div className="bg-white rounded-[1.5rem] p-6 mb-4 border border-slate-200">

@@ -8,6 +8,7 @@ const pool = require('./db');
 const { getPackages, createPackage } = require('./controllers/packagesController');
 const { getBookings, createBooking, updateBooking } = require('./controllers/bookingsController');
 const { enrichCountry } = require('./controllers/enrichController');
+const { getAiRecommendation } = require('./controllers/aiController');
 
 const app = express();
 app.use(cors());
@@ -15,6 +16,7 @@ app.use(express.json());
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 app.get('/api/enrich', enrichCountry);
+app.post('/api/ai/recommend', getAiRecommendation);
 
 app.get('/api/packages', getPackages);
 app.post('/api/packages', createPackage);
