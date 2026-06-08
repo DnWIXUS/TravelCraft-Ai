@@ -22,6 +22,15 @@ export function CustomPackagePage() {
   const [aiRecommendation, setAiRecommendation] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState("");
+
+  type DestInfo = {
+    highlights: string[];
+    bestTime: string;
+    prices: { budget: string; midRange: string; luxury: string };
+    tip: string;
+  };
+  const [destInfo, setDestInfo] = useState<DestInfo | null>(null);
+  const [destInfoLoading, setDestInfoLoading] = useState(false);
   const [formData, setFormData] = useState({
     destination: "",
     destinationType: "",
@@ -216,6 +225,29 @@ export function CustomPackagePage() {
 
   const [selectedDestination, setSelectedDestination] = useState<DestinationData | null>(null);
   const [locationMessage, setLocationMessage] = useState("");
+
+  useEffect(() => {
+    if (!selectedDestination || selectedDestination.key === "current-location") {
+      setDestInfo(null);
+      return;
+    }
+    setDestInfoLoading(true);
+    setDestInfo(null);
+    const API_URL = import.meta.env.VITE_API_URL || "";
+    fetch(`${API_URL}/api/ai/destination-info`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        destination: selectedDestination.name,
+        country: selectedDestination.country,
+        lang: i18n.language,
+      }),
+    })
+      .then((r) => r.json())
+      .then((data) => { if (data.highlights) setDestInfo(data); })
+      .catch(() => {})
+      .finally(() => setDestInfoLoading(false));
+  }, [selectedDestination]);
 
   const lookupDestination = (value: string) => {
     const normalized = value.toLowerCase().trim();
@@ -524,6 +556,66 @@ export function CustomPackagePage() {
                         />
                       ))}
                     </div>
+                  </div>
+                )}
+
+                {/* AI Destination Info Card */}
+                {(destInfoLoading || destInfo) && selectedDestination && (
+                  <div className="rounded-[2rem] border border-blue-100 bg-gradient-to-br from-blue-50 to-purple-50 p-5">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Sparkles className="w-4 h-4 text-purple-600" />
+                      <span className="text-sm font-semibold text-purple-700">{t("chat.aiInfo")}</span>
+                    </div>
+                    {destInfoLoading ? (
+                      <div className="flex items-center gap-2 text-slate-500 text-sm">
+                        <div className="flex gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce [animation-delay:0ms]" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce [animation-delay:150ms]" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce [animation-delay:300ms]" />
+                        </div>
+                        {t("chat.aiLoading")}
+                      </div>
+                    ) : destInfo && (
+                      <div className="space-y-3">
+                        <ul className="space-y-1.5">
+                          {destInfo.highlights?.map((h, i) => (
+                            <li key={i} className="text-sm text-slate-700 flex items-start gap-2">
+                              <span className="text-blue-500 font-bold mt-0.5">•</span>
+                              {h}
+                            </li>
+                          ))}
+                        </ul>
+                        {destInfo.bestTime && (
+                          <p className="text-sm text-slate-600">
+                            <span className="font-semibold">🗓 {t("chat.bestTime")}:</span> {destInfo.bestTime}
+                          </p>
+                        )}
+                        {destInfo.prices && (
+                          <div>
+                            <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">
+                              💰 {t("chat.prices")} ({t("chat.perDay")})
+                            </p>
+                            <div className="grid grid-cols-3 gap-2">
+                              {(["budget", "midRange", "luxury"] as const).map((level) => (
+                                <div key={level} className="bg-white rounded-xl p-2.5 text-center border border-slate-200 shadow-sm">
+                                  <div className="text-xs text-slate-400 mb-1 capitalize">
+                                    {level === "midRange" ? "Mid" : level}
+                                  </div>
+                                  <div className="text-xs font-bold text-slate-800">
+                                    {destInfo.prices[level]}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {destInfo.tip && (
+                          <div className="bg-white rounded-xl p-3 border border-slate-200 text-xs text-slate-600">
+                            💡 <span className="font-semibold">{t("chat.tip")}:</span> {destInfo.tip}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 
