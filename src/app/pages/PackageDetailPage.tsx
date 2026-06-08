@@ -18,7 +18,7 @@ interface BookingItem {
 export function PackageDetailPage() {
   const params = useParams();
   const navigate = useNavigate();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const lang = i18n.language as "uz" | "ru";
   const [message, setMessage] = useState<string | null>(null);
   const [packageData, setPackageData] = useState<ReturnType<typeof getPackageBySlug> | null>(null);
@@ -52,7 +52,7 @@ export function PackageDetailPage() {
   const handleBooking = () => {
     if (!packageData) return;
     if (!name.trim() || !phone.trim()) {
-      setMessage("Please enter your name and phone number to complete the booking.");
+      setMessage(t("detail.enterNamePhone"));
       return;
     }
 
@@ -73,10 +73,10 @@ export function PackageDetailPage() {
 
     if (existingIndex !== -1) {
       bookings[existingIndex] = bookingRecord;
-      setMessage("Your booking details were updated successfully.");
+      setMessage(t("detail.bookingUpdated"));
     } else {
       bookings.push(bookingRecord);
-      setMessage("Your tour has been booked! You can review it in your dashboard.");
+      setMessage(t("detail.tourBooked"));
     }
 
     localStorage.setItem("travelcraft_bookings", JSON.stringify(bookings));
@@ -90,14 +90,14 @@ export function PackageDetailPage() {
     return (
       <div className="container mx-auto px-4 py-20">
         <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-lg">
-          <h2 className="text-3xl font-bold mb-4">Package not found</h2>
-          <p className="text-slate-600 mb-6">Please select a valid travel package from the list.</p>
+          <h2 className="text-3xl font-bold mb-4">{t("detail.packageNotFound")}</h2>
+          <p className="text-slate-600 mb-6">{t("detail.packageNotFoundDesc")}</p>
           <Link
             to="/"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to home
+            {t("detail.backToHome")}
           </Link>
         </div>
       </div>
@@ -118,12 +118,12 @@ export function PackageDetailPage() {
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-4">
               <div className="min-w-0">
                 <p className="text-xs sm:text-sm text-slate-500 uppercase tracking-[0.15em] sm:tracking-[0.2em]">
-                  {packageData.type === "domestic" ? "Domestic" : "International"} package
+                  {packageData.type === "domestic" ? t("detail.domestic") : t("detail.international")} {t("detail.packageLabel")}
                 </p>
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 leading-tight">{localTitle}</h1>
               </div>
               <div className="sm:text-right shrink-0">
-                <p className="text-sm text-slate-500">From</p>
+                <p className="text-sm text-slate-500">{t("detail.from")}</p>
                 <p className="text-3xl sm:text-4xl font-bold text-blue-600">${packageData.price}</p>
               </div>
             </div>
@@ -134,7 +134,7 @@ export function PackageDetailPage() {
               <div className="grid gap-6 mb-8">
                 {localVibe && (
                   <div className="rounded-3xl border border-slate-200 p-6 bg-slate-50">
-                    <h2 className="text-2xl font-semibold mb-3">Trip vibe</h2>
+                    <h2 className="text-2xl font-semibold mb-3">{t("detail.tripVibe")}</h2>
                     <p className="text-slate-700 leading-relaxed">{localVibe}</p>
                   </div>
                 )}
@@ -157,18 +157,18 @@ export function PackageDetailPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
               <div className="rounded-3xl border border-slate-200 p-5 bg-slate-50">
-                <p className="text-sm text-slate-500">Duration</p>
+                <p className="text-sm text-slate-500">{t("detail.duration")}</p>
                 <p className="mt-3 text-lg font-semibold">{localDuration}</p>
               </div>
               {packageData.country && (
                 <div className="rounded-3xl border border-slate-200 p-5 bg-slate-50">
-                  <p className="text-sm text-slate-500">Destination</p>
+                  <p className="text-sm text-slate-500">{t("detail.destination")}</p>
                   <p className="mt-3 text-lg font-semibold">{packageData.country}</p>
                 </div>
               )}
               {packageData.hotel && (
                 <div className="rounded-3xl border border-slate-200 p-5 bg-slate-50">
-                  <p className="text-sm text-slate-500">Hotel</p>
+                  <p className="text-sm text-slate-500">{t("detail.hotel")}</p>
                   <p className="mt-3 text-lg font-semibold">{packageData.hotel}</p>
                 </div>
               )}
@@ -186,8 +186,8 @@ export function PackageDetailPage() {
             <div className="rounded-3xl border border-slate-200 p-8 bg-gradient-to-br from-blue-600 to-purple-600 text-white">
               <div className="flex flex-col gap-4 md:flex-row items-start justify-between mb-4">
                 <div>
-                  <p className="text-sm opacity-80">Booking includes instant confirmation</p>
-                  <p className="text-2xl font-bold">Reserve your spot today</p>
+                  <p className="text-sm opacity-80">{t("detail.bookingConfirmation")}</p>
+                  <p className="text-2xl font-bold">{t("detail.reserveToday")}</p>
                 </div>
                 <div className="flex items-center gap-2 text-lg">
                   <Star className="w-5 h-5 text-yellow-300" />
@@ -198,17 +198,17 @@ export function PackageDetailPage() {
               <div className="grid gap-4">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <label className="flex flex-col gap-2 text-sm">
-                    Your name
+                    {t("detail.yourName")}
                     <input
                       value={name}
                       onChange={(event) => setName(event.target.value)}
-                      placeholder="Name"
+                      placeholder={t("detail.namePlaceholder")}
                       className="rounded-2xl border border-white/30 bg-white/10 px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-white"
                     />
                   </label>
 
                   <label className="flex flex-col gap-2 text-sm">
-                    Phone number
+                    {t("detail.phoneNumber")}
                     <input
                       value={phone}
                       onChange={(event) => setPhone(event.target.value)}
@@ -219,7 +219,7 @@ export function PackageDetailPage() {
                 </div>
 
                 <label className="flex flex-col gap-2 text-sm max-w-sm">
-                  Guests
+                  {t("detail.guests")}
                   <input
                     type="number"
                     min={1}
@@ -230,8 +230,8 @@ export function PackageDetailPage() {
                 </label>
 
                 <div className="rounded-3xl border border-white/20 bg-white/10 p-4 text-sm text-white/90">
-                  <p className="font-semibold">Booking details</p>
-                  <p className="mt-2">Provide your name and phone so our team can confirm the reservation and reach you faster.</p>
+                  <p className="font-semibold">{t("detail.bookingDetails")}</p>
+                  <p className="mt-2">{t("detail.bookingDetailsDesc")}</p>
                 </div>
               </div>
 
@@ -240,7 +240,7 @@ export function PackageDetailPage() {
                 className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-3xl bg-white text-blue-600 px-8 py-4 font-semibold shadow-lg hover:bg-slate-100 transition md:w-auto"
               >
                 <CalendarDays className="w-5 h-5" />
-                {existingBooking ? "Update Booking" : "Book This Tour"}
+                {existingBooking ? t("detail.updateBooking") : t("detail.bookTour")}
               </button>
               {message && <p className="mt-4 text-sm text-white/90">{message}</p>}
             </div>
@@ -249,41 +249,41 @@ export function PackageDetailPage() {
 
         <aside className="lg:w-1/3 space-y-6">
           <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-lg">
-            <h2 className="text-xl font-bold mb-4">Need help?</h2>
+            <h2 className="text-xl font-bold mb-4">{t("detail.needHelp")}</h2>
             <p className="text-slate-600 mb-4">
-              Contact our support team to customize your trip, add extra nights, or arrange private airport transfer.
+              {t("detail.supportDesc")}
             </p>
             <div className="space-y-3">
               <div className="flex items-center gap-3 text-slate-700">
                 <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-700">+998</span>
                 <div>
-                  <p className="font-semibold">Phone</p>
+                  <p className="font-semibold">{t("detail.phone")}</p>
                   <p className="text-sm text-slate-500">+998 XX XXX XX XX</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 text-slate-700">
                 <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-purple-50 text-purple-700">✉</span>
                 <div>
-                  <p className="font-semibold">Email</p>
+                  <p className="font-semibold">{t("detail.email")}</p>
                   <p className="text-sm text-slate-500">support@travelcraft.ai</p>
                 </div>
               </div>
             </div>
           </div>
           <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-lg">
-            <h2 className="text-xl font-bold mb-4">Quick links</h2>
+            <h2 className="text-xl font-bold mb-4">{t("detail.quickLinks")}</h2>
             <div className="space-y-3">
               <Link
                 to="/dashboard"
                 className="block rounded-2xl bg-blue-600 px-4 py-3 text-white text-center hover:bg-blue-700 transition"
               >
-                Open your dashboard
+                {t("detail.openDashboard")}
               </Link>
               <button
                 onClick={() => navigate(-1)}
                 className="w-full rounded-2xl border border-slate-200 px-4 py-3 hover:bg-slate-50 transition"
               >
-                Back to packages
+                {t("detail.backToPackages")}
               </button>
             </div>
           </div>
