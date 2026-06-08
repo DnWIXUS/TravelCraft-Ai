@@ -3,5 +3,6 @@ dist/
 *.local
 .DS_Store
 
-# Server secrets (never commit)
+# Secrets (never commit)
+.env
 server/.env
