@@ -11,7 +11,10 @@
       "Bash(npm install *)",
       "Bash(npm run *)",
       "Skill(update-config)",
-      "Skill(update-config:*)"
+      "Skill(update-config:*)",
+      "Bash(dir \"c:\\\\Users\\\\Ika85\\\\Desktop\\\\TravelCraft AI\")",
+      "Bash(node -e \"require\\('./src/controllers/admin/authController'\\); require\\('./src/middleware/adminAuth'\\); require\\('./src/controllers/admin/dashboardController'\\); require\\('./src/routes/admin/auth'\\); require\\('./src/routes/admin/dashboard'\\); console.log\\('All modules load OK'\\)\")",
+      "Bash(node -e ' *)"
     ]
   },
   "hooks": {
@@ -22,8 +25,8 @@
           {
             "type": "command",
             "command": "git -C \"c:/Users/Ika85/Desktop/TravelCraft AI Homepage Design\" add -A && git -C \"c:/Users/Ika85/Desktop/TravelCraft AI Homepage Design\" diff --cached --quiet || git -C \"c:/Users/Ika85/Desktop/TravelCraft AI Homepage Design\" commit -m \"auto: save changes\" && git -C \"c:/Users/Ika85/Desktop/TravelCraft AI Homepage Design\" push origin main 2>/dev/null || true",
-            "async": true,
-            "statusMessage": "GitHub ga push qilinmoqda..."
+            "statusMessage": "GitHub ga push qilinmoqda...",
+            "async": true
           }
         ]
       }
