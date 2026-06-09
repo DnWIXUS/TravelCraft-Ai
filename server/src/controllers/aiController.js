@@ -1,18 +1,18 @@
 const OpenAI = require('openai');
 
 const client = new OpenAI({
-  apiKey: process.env.TOGETHER_API_KEY,
-  baseURL: 'https://api.together.xyz/v1',
+  apiKey: process.env.DEEPSEEK_API_KEY,
+  baseURL: 'https://api.deepseek.com',
 });
 
-const MODEL = 'meta-llama/Llama-3.3-70B-Instruct-Turbo';
+const MODEL = 'deepseek-chat';
 
 function langLabel(lang) {
   return lang === 'uz' ? "O'zbek tilida" : lang === 'ru' ? 'на русском языке' : 'in English';
 }
 
 async function getAiRecommendation(req, res) {
-  if (!process.env.TOGETHER_API_KEY) return res.status(503).json({ error: 'AI service not configured' });
+  if (!process.env.DEEPSEEK_API_KEY) return res.status(503).json({ error: 'AI service not configured' });
 
   const { destination, destinationType, startDate, endDate, days, travelers, budget, hotelType, transport, interests, lang } = req.body;
 
@@ -41,13 +41,13 @@ Write 3 short paragraphs (~200 words): highlight top attractions, recommended ac
     });
     res.json({ recommendation: completion.choices[0].message.content });
   } catch (err) {
-    console.error('Together AI recommendation error:', err.message);
+    console.error('DeepSeek recommendation error:', err.message);
     res.status(500).json({ error: 'Failed to generate recommendation' });
   }
 }
 
 async function chatWithAi(req, res) {
-  if (!process.env.TOGETHER_API_KEY) return res.status(503).json({ error: 'AI service not configured' });
+  if (!process.env.DEEPSEEK_API_KEY) return res.status(503).json({ error: 'AI service not configured' });
 
   const { messages, lang } = req.body;
   if (!Array.isArray(messages) || messages.length === 0) {
@@ -66,13 +66,13 @@ Always respond ${langLabel(lang)}. Be concise and helpful (max 3 short paragraph
     });
     res.json({ reply: completion.choices[0].message.content });
   } catch (err) {
-    console.error('Together AI chat error:', err.message);
+    console.error('DeepSeek chat error:', err.message);
     res.status(500).json({ error: 'Failed to get AI response' });
   }
 }
 
 async function getDestinationInfo(req, res) {
-  if (!process.env.TOGETHER_API_KEY) return res.status(503).json({ error: 'AI service not configured' });
+  if (!process.env.DEEPSEEK_API_KEY) return res.status(503).json({ error: 'AI service not configured' });
 
   const { destination, country, lang } = req.body;
   if (!destination) return res.status(400).json({ error: 'destination required' });
@@ -98,14 +98,12 @@ Return ONLY a valid JSON object with this exact shape (no extra text, no markdow
         { role: 'user', content: prompt },
       ],
       max_tokens: 400,
+      response_format: { type: 'json_object' },
     });
-
-    const raw = completion.choices[0].message.content.trim();
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    const info = JSON.parse(jsonMatch ? jsonMatch[0] : raw);
+    const info = JSON.parse(completion.choices[0].message.content);
     res.json(info);
   } catch (err) {
-    console.error('Together AI destination info error:', err.message);
+    console.error('DeepSeek destination info error:', err.message);
     res.status(500).json({ error: 'Failed to get destination info' });
   }
 }
