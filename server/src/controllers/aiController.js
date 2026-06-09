@@ -1,18 +1,22 @@
 const OpenAI = require('openai');
 
-const client = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY,
-  baseURL: 'https://api.deepseek.com',
-});
-
 const MODEL = 'deepseek-chat';
+
+function getClient() {
+  if (!process.env.DEEPSEEK_API_KEY) return null;
+  return new OpenAI({
+    apiKey: process.env.DEEPSEEK_API_KEY,
+    baseURL: 'https://api.deepseek.com',
+  });
+}
 
 function langLabel(lang) {
   return lang === 'uz' ? "O'zbek tilida" : lang === 'ru' ? 'на русском языке' : 'in English';
 }
 
 async function getAiRecommendation(req, res) {
-  if (!process.env.DEEPSEEK_API_KEY) return res.status(503).json({ error: 'AI service not configured' });
+  const client = getClient();
+  if (!client) return res.status(503).json({ error: 'AI service not configured' });
 
   const { destination, destinationType, startDate, endDate, days, travelers, budget, hotelType, transport, interests, lang } = req.body;
 
@@ -47,7 +51,8 @@ Write 3 short paragraphs (~200 words): highlight top attractions, recommended ac
 }
 
 async function chatWithAi(req, res) {
-  if (!process.env.DEEPSEEK_API_KEY) return res.status(503).json({ error: 'AI service not configured' });
+  const client = getClient();
+  if (!client) return res.status(503).json({ error: 'AI service not configured' });
 
   const { messages, lang } = req.body;
   if (!Array.isArray(messages) || messages.length === 0) {
@@ -72,7 +77,8 @@ Always respond ${langLabel(lang)}. Be concise and helpful (max 3 short paragraph
 }
 
 async function getDestinationInfo(req, res) {
-  if (!process.env.DEEPSEEK_API_KEY) return res.status(503).json({ error: 'AI service not configured' });
+  const client = getClient();
+  if (!client) return res.status(503).json({ error: 'AI service not configured' });
 
   const { destination, country, lang } = req.body;
   if (!destination) return res.status(400).json({ error: 'destination required' });
