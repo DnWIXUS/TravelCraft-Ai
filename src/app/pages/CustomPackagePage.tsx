@@ -233,7 +233,7 @@ export function CustomPackagePage() {
     }
     setDestInfoLoading(true);
     setDestInfo(null);
-    const API_URL = import.meta.env.VITE_API_URL || "";
+    const API_URL = "";
     fetch(`${API_URL}/api/ai/destination-info`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -351,7 +351,7 @@ export function CustomPackagePage() {
 
   useEffect(() => {
     if (currentStep === 8 && !aiRecommendation && !aiLoading) {
-      const API_URL = import.meta.env.VITE_API_URL || '';
+      const API_URL = "";
       setAiLoading(true);
       setAiError("");
       fetch(`${API_URL}/api/ai/recommend`, {

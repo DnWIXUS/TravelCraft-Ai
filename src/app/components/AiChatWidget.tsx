@@ -43,7 +43,7 @@ export function AiChatWidget() {
     setInput("");
     setLoading(true);
 
-    const API_URL = import.meta.env.VITE_API_URL || "";
+    const API_URL = "";
     try {
       const res = await fetch(`${API_URL}/api/ai/chat`, {
         method: "POST",

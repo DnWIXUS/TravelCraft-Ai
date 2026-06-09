@@ -1,5 +1,5 @@
 export async function adminFetch(path: string, token?: string, opts: RequestInit = {}) {
-  const base = `${import.meta.env.VITE_API_URL || ''}/api/admin`;
+  const base = `/api/admin`;
   const headers = new Headers(opts.headers || {} as any);
   headers.set('Content-Type', headers.get('Content-Type') || 'application/json');
   if (token) headers.set('Authorization', `Bearer ${token}`);

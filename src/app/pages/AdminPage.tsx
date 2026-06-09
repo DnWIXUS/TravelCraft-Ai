@@ -13,7 +13,7 @@ export function AdminPage() {
   const [enrichLoading, setEnrichLoading] = useState(false);
   const [enrichError, setEnrichError] = useState("");
 
-  const api = (path: string) => `${import.meta.env.VITE_API_URL || ''}/api${path}`;
+  const api = (path: string) => `/api${path}`;
 
   const fetchData = async () => {
     try {

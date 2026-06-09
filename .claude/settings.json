@@ -14,7 +14,13 @@
       "Skill(update-config:*)",
       "Bash(dir \"c:\\\\Users\\\\Ika85\\\\Desktop\\\\TravelCraft AI\")",
       "Bash(node -e \"require\\('./src/controllers/admin/authController'\\); require\\('./src/middleware/adminAuth'\\); require\\('./src/controllers/admin/dashboardController'\\); require\\('./src/routes/admin/auth'\\); require\\('./src/routes/admin/dashboard'\\); console.log\\('All modules load OK'\\)\")",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(Get-ChildItem -Path src -Recurse -Directory)",
+      "Bash(Select-Object FullName)",
+      "Bash(xargs grep -l \"openai\\\\|anthropic\\\\|chat\\\\|message\")",
+      "Bash(xargs cat)",
+      "Bash(git rm *)",
+      "Bash(git commit *)"
     ]
   },
   "hooks": {
