@@ -1,13 +1,10 @@
-const OpenAI = require('openai');
+const Groq = require('groq-sdk');
 
-const MODEL = 'deepseek-chat';
+const MODEL = 'llama-3.3-70b-versatile';
 
 function getClient() {
-  if (!process.env.DEEPSEEK_API_KEY) return null;
-  return new OpenAI({
-    apiKey: process.env.DEEPSEEK_API_KEY,
-    baseURL: 'https://api.deepseek.com',
-  });
+  if (!process.env.GROQ_API_KEY) return null;
+  return new Groq({ apiKey: process.env.GROQ_API_KEY });
 }
 
 function langLabel(lang) {
@@ -41,11 +38,11 @@ Write 3 short paragraphs (~200 words): highlight top attractions, recommended ac
         { role: 'system', content: 'You are a helpful and enthusiastic travel advisor.' },
         { role: 'user', content: prompt },
       ],
-      max_tokens: 500,
+      max_tokens: 600,
     });
     res.json({ recommendation: completion.choices[0].message.content });
   } catch (err) {
-    console.error('DeepSeek recommendation error:', err.message);
+    console.error('Groq recommendation error:', err.message);
     res.status(500).json({ error: 'Failed to generate recommendation' });
   }
 }
@@ -64,14 +61,20 @@ Help users with: destination info, travel tips, best seasons to visit, visa requ
 Always respond ${langLabel(lang)}. Be concise and helpful (max 3 short paragraphs). Include specific price estimates when asked about costs.`;
 
   try {
+    const history = messages.slice(-10);
+    const groqMessages = [
+      { role: 'system', content: system },
+      ...history.map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content })),
+    ];
+
     const completion = await client.chat.completions.create({
       model: MODEL,
-      messages: [{ role: 'system', content: system }, ...messages.slice(-10)],
-      max_tokens: 600,
+      messages: groqMessages,
+      max_tokens: 500,
     });
     res.json({ reply: completion.choices[0].message.content });
   } catch (err) {
-    console.error('DeepSeek chat error:', err.message);
+    console.error('Groq chat error:', err.message);
     res.status(500).json({ error: 'Failed to get AI response' });
   }
 }
@@ -100,16 +103,16 @@ Return ONLY a valid JSON object with this exact shape (no extra text, no markdow
     const completion = await client.chat.completions.create({
       model: MODEL,
       messages: [
-        { role: 'system', content: 'You are a travel expert. Always respond with valid JSON only, no extra text.' },
+        { role: 'system', content: 'You are a travel expert. Always respond with valid JSON only, no extra text, no markdown code blocks.' },
         { role: 'user', content: prompt },
       ],
       max_tokens: 400,
-      response_format: { type: 'json_object' },
     });
-    const info = JSON.parse(completion.choices[0].message.content);
+    const text = completion.choices[0].message.content.trim().replace(/^```json\n?/, '').replace(/\n?```$/, '');
+    const info = JSON.parse(text);
     res.json(info);
   } catch (err) {
-    console.error('DeepSeek destination info error:', err.message);
+    console.error('Groq destination info error:', err.message);
     res.status(500).json({ error: 'Failed to get destination info' });
   }
 }
