@@ -2,7 +2,7 @@ services:
   - type: web
     name: travelcraft-ai
     runtime: node
-    buildCommand: npm install && npm run build && cd server && npm install
+    buildCommand: npm install && npm run build && npm install --prefix server
     startCommand: node server/src/index.js
     envVars:
       - key: NODE_VERSION
