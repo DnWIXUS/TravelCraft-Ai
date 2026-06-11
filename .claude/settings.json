@@ -20,7 +20,9 @@
       "Bash(xargs grep -l \"openai\\\\|anthropic\\\\|chat\\\\|message\")",
       "Bash(xargs cat)",
       "Bash(git rm *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(curl -s https://travelcraft-ai.onrender.com/api/health)",
+      "Bash(curl -v -m 15 https://travelcraft-ai.onrender.com/api/health)"
     ]
   },
   "hooks": {
