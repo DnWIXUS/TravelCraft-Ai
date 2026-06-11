@@ -49,7 +49,10 @@ Write 3 short paragraphs (~200 words): highlight top attractions, recommended ac
 
 async function chatWithAi(req, res) {
   const client = getClient();
-  if (!client) return res.status(503).json({ error: 'AI service not configured' });
+  if (!client) {
+    console.error('Groq client not initialized — GROQ_API_KEY missing');
+    return res.status(503).json({ error: 'AI service not configured' });
+  }
 
   const { messages, lang } = req.body;
   if (!Array.isArray(messages) || messages.length === 0) {
@@ -74,8 +77,8 @@ Always respond ${langLabel(lang)}. Be concise and helpful (max 3 short paragraph
     });
     res.json({ reply: completion.choices[0].message.content });
   } catch (err) {
-    console.error('Groq chat error:', err.message);
-    res.status(500).json({ error: 'Failed to get AI response' });
+    console.error('Groq chat error:', err.status, err.message);
+    res.status(500).json({ error: 'Failed to get AI response', detail: err.message });
   }
 }
 
