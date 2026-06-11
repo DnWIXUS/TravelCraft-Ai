@@ -39,7 +39,10 @@
       "Bash(taskkill /PID 20644 /F)",
       "PowerShell(Stop-Process -Id 20644 -Force -ErrorAction SilentlyContinue)",
       "Bash(Start-Sleep -Seconds 3)",
-      "Bash(curl -s -X POST http://localhost:8080/api/ai/chat -H \"Content-Type: application/json\" -d '{\\\\\"messages\\\\\":[{\\\\\"role\\\\\":\\\\\"user\\\\\",\\\\\"content\\\\\":\\\\\"Tell me about Tashkent in 2 sentences\\\\\"}],\\\\\"lang\\\\\":\\\\\"en\\\\\"}')"
+      "Bash(curl -s -X POST http://localhost:8080/api/ai/chat -H \"Content-Type: application/json\" -d '{\\\\\"messages\\\\\":[{\\\\\"role\\\\\":\\\\\"user\\\\\",\\\\\"content\\\\\":\\\\\"Tell me about Tashkent in 2 sentences\\\\\"}],\\\\\"lang\\\\\":\\\\\"en\\\\\"}')",
+      "Bash(cat server/.gitignore)",
+      "Bash(cat .gitignore)",
+      "Bash(git reset *)"
     ]
   },
   "hooks": {
