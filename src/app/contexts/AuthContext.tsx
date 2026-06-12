@@ -5,16 +5,16 @@ type User = { id: number; name: string; email: string; role: string } | null;
 type AuthContextType = {
   user: User;
   token: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  login: (phone: string, password: string) => Promise<void>;
+  register: (name: string, phone: string, password: string) => Promise<void>;
   logout: () => void;
 };
 
 export const AuthContext = createContext<AuthContextType>({
   user: null,
   token: null,
-  login: async () => {},
-  register: async () => {},
+  login: async (_phone: string, _password: string) => {},
+  register: async (_name: string, _phone: string, _password: string) => {},
   logout: () => {},
 });
 
@@ -37,11 +37,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     else localStorage.removeItem('user_data');
   }, [user]);
 
-  const login = async (email: string, password: string) => {
+  const login = async (phone: string, password: string) => {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ phone, password }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Login xatosi');
@@ -49,11 +49,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(data.user);
   };
 
-  const register = async (name: string, email: string, password: string) => {
+  const register = async (name: string, phone: string, password: string) => {
     const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name, phone, password }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Ro'yxatdan o'tish xatosi");

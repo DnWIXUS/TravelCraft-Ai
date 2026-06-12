@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, User, Lock, Mail, Eye, EyeOff, Sparkles } from "lucide-react";
+import { X, User, Lock, Phone, Eye, EyeOff, Sparkles } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 
 interface Props {
@@ -13,7 +13,7 @@ export function LoginModal({ open, onClose, onSuccess }: Props) {
   const { login, register } = useAuth();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -25,10 +25,10 @@ export function LoginModal({ open, onClose, onSuccess }: Props) {
     setLoading(true);
     try {
       if (mode === "login") {
-        await login(email, password);
+        await login(phone, password);
       } else {
         if (!name.trim()) { setError("Ism kiriting"); setLoading(false); return; }
-        await register(name, email, password);
+        await register(name, phone, password);
       }
       onSuccess?.();
       onClose();
@@ -39,7 +39,7 @@ export function LoginModal({ open, onClose, onSuccess }: Props) {
     }
   };
 
-  const reset = () => { setError(""); setName(""); setEmail(""); setPassword(""); };
+  const reset = () => { setError(""); setName(""); setPhone(""); setPassword(""); };
 
   return (
     <AnimatePresence>
@@ -73,8 +73,8 @@ export function LoginModal({ open, onClose, onSuccess }: Props) {
               </h2>
               <p className="text-slate-500 text-sm mb-5">
                 {mode === "login"
-                  ? "Bron qilish uchun tizimga kiring"
-                  : "Yangi hisob yarating va bron qiling"}
+                  ? "Bron qilish uchun telefon raqamingiz bilan kiring"
+                  : "Telefon raqamingiz bilan ro'yxatdan o'ting"}
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-3">
@@ -92,12 +92,12 @@ export function LoginModal({ open, onClose, onSuccess }: Props) {
                   </div>
                 )}
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    type="tel"
+                    placeholder="+998 90 123 45 67"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                     required
                   />
