@@ -120,4 +120,62 @@ Return ONLY a valid JSON object with this exact shape (no extra text, no markdow
   }
 }
 
-module.exports = { getAiRecommendation, chatWithAi, getDestinationInfo };
+async function getItinerary(req, res) {
+  const client = getClient();
+  if (!client) return res.status(503).json({ error: 'AI service not configured' });
+
+  const { destination, destinationType, days, travelers, budget, hotelType, transport, interests, startDate, lang } = req.body;
+  if (!destination || !days) return res.status(400).json({ error: 'destination and days required' });
+
+  const langNote = lang === 'uz' ? "O'zbek tilida yoz" : lang === 'ru' ? 'Пиши на русском' : 'Write in English';
+
+  const prompt = `You are a professional travel planner. Create a detailed ${days}-day itinerary for ${travelers || 2} travelers visiting ${destination}.
+Budget level: ${budget || 'mid-range'}. Hotel: ${hotelType || 'standard'}. Transport: ${transport || 'mixed'}. Interests: ${Array.isArray(interests) && interests.length ? interests.join(', ') : 'general tourism'}.
+${startDate ? `Trip starts: ${startDate}.` : ''}
+
+${langNote}.
+
+Return ONLY valid JSON, no markdown, no extra text:
+{
+  "title": "trip title (max 8 words)",
+  "days": [
+    {
+      "day": 1,
+      "title": "day theme title",
+      "items": [
+        { "time": "09:00", "type": "visit", "place": "place name", "note": "1 sentence description" },
+        { "time": "12:30", "type": "food", "place": "restaurant name", "dish": "recommended dish name" },
+        { "time": "14:00", "type": "visit", "place": "place name", "note": "1 sentence description" },
+        { "time": "19:00", "type": "food", "place": "restaurant or cafe name", "dish": "recommended dish" }
+      ]
+    }
+  ]
+}
+
+Rules:
+- Each day must have 4-6 items alternating visits and meals
+- type must be one of: "visit", "food", "hotel", "transport"
+- Include realistic local restaurants and actual dishes
+- Times must be realistic (morning start ~09:00, last item ~20:00)
+- Generate exactly ${days} day objects`;
+
+  try {
+    const completion = await client.chat.completions.create({
+      model: MODEL,
+      messages: [
+        { role: 'system', content: 'You are a travel itinerary expert. Always respond with valid JSON only, no markdown, no code blocks.' },
+        { role: 'user', content: prompt },
+      ],
+      max_tokens: 2000,
+      temperature: 0.7,
+    });
+    const text = completion.choices[0].message.content.trim().replace(/^```json\n?/, '').replace(/^```\n?/, '').replace(/\n?```$/, '');
+    const itinerary = JSON.parse(text);
+    res.json(itinerary);
+  } catch (err) {
+    console.error('Groq itinerary error:', err.status, err.message);
+    res.status(500).json({ error: 'Failed to generate itinerary', detail: err.message });
+  }
+}
+
+module.exports = { getAiRecommendation, chatWithAi, getDestinationInfo, getItinerary };

@@ -14,6 +14,11 @@ import {
   ArrowRight,
   ArrowLeft,
   Check,
+  Utensils,
+  Clock,
+  Navigation,
+  BedDouble,
+  Download,
 } from "lucide-react";
 
 export function CustomPackagePage() {
@@ -24,6 +29,9 @@ export function CustomPackagePage() {
   const [aiError, setAiError] = useState("");
   const [planSelected, setPlanSelected] = useState(false);
   const [customBudgetAmount, setCustomBudgetAmount] = useState("");
+  const [itinerary, setItinerary] = useState<null | { title: string; days: { day: number; title: string; items: { time: string; type: string; place: string; note?: string; dish?: string }[] }[] }>(null);
+  const [itineraryLoading, setItineraryLoading] = useState(false);
+  const [itineraryError, setItineraryError] = useState("");
 
   type DestInfo = {
     highlights: string[];
@@ -402,22 +410,39 @@ export function CustomPackagePage() {
   };
 
   const handleGenerateCustomPackage = () => {
-    const nextBooking = {
-      id: Date.now(),
-      type: "custom" as const,
-      title: formData.destination || t("customPackage.customTitle"),
-      price: Math.max(100, formData.days * 120),
-      name: formData.name || "",
-      phone: formData.phone || "",
-      guests: formData.travelers,
-      bookedAt: new Date().toISOString(),
-      days: formData.days,
-    };
+    setItineraryLoading(true);
+    setItineraryError("");
+    setItinerary(null);
 
-    const bookings = JSON.parse(localStorage.getItem("travelcraft_bookings") || "[]");
-    bookings.push(nextBooking);
-    localStorage.setItem("travelcraft_bookings", JSON.stringify(bookings));
-    navigate("/dashboard");
+    fetch("/api/ai/itinerary", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...formData, lang: i18n.language }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.days) {
+          setItinerary(data);
+          const nextBooking = {
+            id: Date.now(),
+            type: "custom" as const,
+            title: data.title || formData.destination || t("customPackage.customTitle"),
+            price: Math.max(100, formData.days * 120),
+            name: formData.name || "",
+            phone: formData.phone || "",
+            guests: formData.travelers,
+            bookedAt: new Date().toISOString(),
+            days: formData.days,
+          };
+          const bookings = JSON.parse(localStorage.getItem("travelcraft_bookings") || "[]");
+          bookings.push(nextBooking);
+          localStorage.setItem("travelcraft_bookings", JSON.stringify(bookings));
+        } else {
+          setItineraryError(data.error || "Kun tartibi yaratishda xato.");
+        }
+      })
+      .catch(() => setItineraryError("Serverga ulanishda xato."))
+      .finally(() => setItineraryLoading(false));
   };
 
   const handleNext = () => {
@@ -1118,11 +1143,16 @@ export function CustomPackagePage() {
                 </div>
               </div>
 
+              {itineraryError && (
+                <p className="text-sm text-red-500 mb-3 text-center">{itineraryError}</p>
+              )}
               <button
                 onClick={handleGenerateCustomPackage}
-                className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 text-white py-4 rounded-[1.5rem] hover:shadow-xl transition-all font-semibold text-lg"
+                disabled={itineraryLoading}
+                className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 text-white py-4 rounded-[1.5rem] hover:shadow-xl transition-all font-semibold text-lg flex items-center justify-center gap-2 disabled:opacity-60"
               >
-                {t("customPackage.viewRecommended")}
+                <Sparkles className="w-5 h-5" />
+                Kun tartibini yaratish
               </button>
             </div>
           </div>
@@ -1132,6 +1162,117 @@ export function CustomPackagePage() {
         return null;
     }
   };
+
+  const typeIcon = (type: string) => {
+    if (type === "food") return <Utensils className="w-4 h-4" />;
+    if (type === "hotel") return <BedDouble className="w-4 h-4" />;
+    if (type === "transport") return <Car className="w-4 h-4" />;
+    return <Navigation className="w-4 h-4" />;
+  };
+  const typeColor = (type: string) => {
+    if (type === "food") return "bg-orange-100 text-orange-600 border-orange-200";
+    if (type === "hotel") return "bg-purple-100 text-purple-600 border-purple-200";
+    if (type === "transport") return "bg-blue-100 text-blue-600 border-blue-200";
+    return "bg-emerald-100 text-emerald-600 border-emerald-200";
+  };
+
+  if (itinerary) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-cyan-100 py-10 px-4">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-5 py-2 rounded-full mb-3 text-sm font-semibold shadow-lg">
+              <Sparkles className="w-4 h-4" /> AI Tur Rejasi
+            </div>
+            <h1 className="text-2xl md:text-3xl font-bold">{itinerary.title}</h1>
+            <p className="text-slate-500 mt-1">{formData.destination} · {formData.days} kun · {formData.travelers} kishi</p>
+          </div>
+
+          <div className="space-y-6 mb-8">
+            {itinerary.days.map((day) => (
+              <motion.div
+                key={day.day}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: day.day * 0.08 }}
+                className="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden"
+              >
+                <div className="bg-gradient-to-r from-blue-600 to-cyan-500 px-6 py-4 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-sm">
+                    {day.day}
+                  </div>
+                  <div>
+                    <div className="text-white/70 text-xs font-medium">{day.day}-kun</div>
+                    <div className="text-white font-bold">{day.title}</div>
+                  </div>
+                </div>
+
+                <div className="p-5 space-y-3">
+                  {day.items.map((item, idx) => (
+                    <div key={idx} className="flex gap-4 items-start">
+                      <div className="flex flex-col items-center">
+                        <div className={`w-9 h-9 rounded-full border flex items-center justify-center flex-shrink-0 ${typeColor(item.type)}`}>
+                          {typeIcon(item.type)}
+                        </div>
+                        {idx < day.items.length - 1 && <div className="w-px h-6 bg-slate-100 mt-1" />}
+                      </div>
+                      <div className="flex-1 pb-1">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="text-xs font-semibold text-slate-400 flex items-center gap-1">
+                            <Clock className="w-3 h-3" />{item.time}
+                          </span>
+                        </div>
+                        <div className="font-semibold text-slate-800">{item.place}</div>
+                        {item.dish && (
+                          <div className="text-sm text-orange-600 font-medium mt-0.5">🍽 {item.dish}</div>
+                        )}
+                        {item.note && (
+                          <div className="text-sm text-slate-500 mt-0.5">{item.note}</div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={() => navigate("/dashboard")}
+              className="flex-1 bg-gradient-to-r from-blue-600 to-cyan-500 text-white py-4 rounded-2xl font-semibold hover:shadow-lg transition-all flex items-center justify-center gap-2"
+            >
+              <Check className="w-5 h-5" /> Dashboard'ga saqlash
+            </button>
+            <button
+              onClick={() => { setItinerary(null); setPlanSelected(false); }}
+              className="flex-1 border border-slate-200 bg-white text-slate-700 py-4 rounded-2xl font-semibold hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
+            >
+              <ArrowLeft className="w-5 h-5" /> Yangi tur yaratish
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (itineraryLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-cyan-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-flex items-center gap-2 bg-white border border-slate-200 px-6 py-4 rounded-2xl shadow-lg mb-4">
+            <Sparkles className="w-5 h-5 text-blue-600 animate-pulse" />
+            <span className="font-semibold text-slate-700">AI kun tartibini tayyorlamoqda...</span>
+          </div>
+          <div className="flex justify-center gap-1 mt-2">
+            <span className="w-2 h-2 rounded-full bg-blue-400 animate-bounce [animation-delay:0ms]" />
+            <span className="w-2 h-2 rounded-full bg-blue-400 animate-bounce [animation-delay:150ms]" />
+            <span className="w-2 h-2 rounded-full bg-blue-400 animate-bounce [animation-delay:300ms]" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!planSelected) {
     return (

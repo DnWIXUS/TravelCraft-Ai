@@ -9,7 +9,7 @@ const pool = require('./db');
 const { getPackages, createPackage } = require('./controllers/packagesController');
 const { getBookings, createBooking, updateBooking } = require('./controllers/bookingsController');
 const { enrichCountry } = require('./controllers/enrichController');
-const { getAiRecommendation, chatWithAi, getDestinationInfo } = require('./controllers/aiController');
+const { getAiRecommendation, chatWithAi, getDestinationInfo, getItinerary } = require('./controllers/aiController');
 
 const app = express();
 app.use(cors());
@@ -20,6 +20,7 @@ app.get('/api/enrich', enrichCountry);
 app.post('/api/ai/recommend', getAiRecommendation);
 app.post('/api/ai/chat', chatWithAi);
 app.post('/api/ai/destination-info', getDestinationInfo);
+app.post('/api/ai/itinerary', getItinerary);
 
 app.get('/api/packages', getPackages);
 app.post('/api/packages', createPackage);
