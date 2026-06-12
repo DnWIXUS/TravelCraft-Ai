@@ -22,6 +22,8 @@ export function CustomPackagePage() {
   const [aiRecommendation, setAiRecommendation] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState("");
+  const [planSelected, setPlanSelected] = useState(false);
+  const [customBudgetAmount, setCustomBudgetAmount] = useState("");
 
   type DestInfo = {
     highlights: string[];
@@ -430,6 +432,65 @@ export function CustomPackagePage() {
     }
   };
 
+  const planTemplates = [
+    {
+      id: "samarkand",
+      title: "Samarqand Klassik",
+      emoji: "🕌",
+      tags: ["3 kun", "Ichki"],
+      description: "Registon, Shohizinda va Gur-Amir maqbarasi",
+      presets: { destination: "Samarkand", destinationType: "domestic", days: 3, travelers: 2, transport: "Train", interests: ["Historical", "Culture"] as string[], budget: "", hotelType: "" },
+    },
+    {
+      id: "bukhara",
+      title: "Buxoro & Xiva",
+      emoji: "🏰",
+      tags: ["5 kun", "Ichki"],
+      description: "Qadimiy bozorlar, madrasalar va qal'alar",
+      presets: { destination: "Bukhara", destinationType: "domestic", days: 5, travelers: 2, transport: "Private Car", interests: ["Historical", "Photography"] as string[], budget: "", hotelType: "" },
+    },
+    {
+      id: "dubai",
+      title: "Dubai Grand Tour",
+      emoji: "🌆",
+      tags: ["6 kun", "Xalqaro"],
+      description: "Burj Khalifa, desert safari, luxury hotels",
+      presets: { destination: "Dubai", destinationType: "international", days: 6, travelers: 2, transport: "Flight", interests: ["Shopping", "Family"] as string[], budget: "", hotelType: "" },
+    },
+    {
+      id: "thailand",
+      title: "Thailand Beach",
+      emoji: "🏖️",
+      tags: ["7 kun", "Xalqaro"],
+      description: "Phuket, Bangkok, tropik jannat",
+      presets: { destination: "Thailand", destinationType: "international", days: 7, travelers: 2, transport: "Flight", interests: ["Beach", "Food"] as string[], budget: "", hotelType: "" },
+    },
+    {
+      id: "santorini",
+      title: "Santorini",
+      emoji: "🌅",
+      tags: ["5 kun", "Xalqaro"],
+      description: "Oq-ko'k shaharchalar va dengiz manzarasi",
+      presets: { destination: "Santorini", destinationType: "international", days: 5, travelers: 2, transport: "Flight", interests: ["Beach", "Photography"] as string[], budget: "", hotelType: "" },
+    },
+    {
+      id: "custom",
+      title: "O'z Paketim",
+      emoji: "✏️",
+      tags: ["Erkin"],
+      description: "Barcha tafsilotlarni o'zim belgilayman",
+      presets: null,
+    },
+  ];
+
+  const selectPlan = (plan: typeof planTemplates[0]) => {
+    if (plan.presets) {
+      setFormData((prev) => ({ ...prev, ...plan.presets }));
+    }
+    setPlanSelected(true);
+    setCurrentStep(1);
+  };
+
   const toggleInterest = (interest: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -778,12 +839,13 @@ export function CustomPackagePage() {
           </div>
         );
 
-      case 4:
+      case 4: {
         const budgetOptions = [
-          { key: "budget", label: t("customPackage.budgetOptions.budget") },
-          { key: "mid-range", label: t("customPackage.budgetOptions.midRange") },
-          { key: "luxury", label: t("customPackage.budgetOptions.luxury") },
+          { key: "budget", label: t("customPackage.budgetOptions.budget"), range: "$100–500/kun" },
+          { key: "mid-range", label: t("customPackage.budgetOptions.midRange"), range: "$500–1500/kun" },
+          { key: "luxury", label: t("customPackage.budgetOptions.luxury"), range: "$1500+/kun" },
         ];
+        const isCustomBudget = formData.budget.startsWith("$") && !budgetOptions.some(b => b.label === formData.budget);
 
         return (
           <div className="space-y-6">
@@ -792,20 +854,63 @@ export function CustomPackagePage() {
               {budgetOptions.map((budget) => (
                 <button
                   key={budget.key}
-                  onClick={() => setFormData({ ...formData, budget: budget.label })}
+                  onClick={() => { setFormData({ ...formData, budget: budget.label }); setCustomBudgetAmount(""); }}
                   className={`p-6 rounded-[1.75rem] border transition-all shadow-sm bg-white hover:-translate-y-0.5 hover:shadow-lg ${
                       formData.budget === budget.label
                         ? "border-transparent bg-gradient-to-br from-blue-600 to-cyan-500 text-white shadow-lg"
                         : "border-slate-200 text-slate-700"
                     }`}
                 >
-                  <DollarSign className="w-8 h-8 mb-3 text-blue-600 mx-auto" />
+                  <DollarSign className={`w-8 h-8 mb-3 mx-auto ${formData.budget === budget.label ? "text-white" : "text-blue-600"}`} />
                   <h3 className="font-bold text-lg">{budget.label}</h3>
+                  <p className={`text-xs mt-1 ${formData.budget === budget.label ? "text-white/80" : "text-slate-400"}`}>{budget.range}</p>
                 </button>
               ))}
             </div>
+
+            <div className="flex items-center gap-3 my-2">
+              <div className="flex-1 border-t border-slate-200" />
+              <span className="text-sm text-slate-400">yoki aniq summa</span>
+              <div className="flex-1 border-t border-slate-200" />
+            </div>
+
+            <div className={`rounded-[1.75rem] border p-5 space-y-4 transition-all ${isCustomBudget ? "border-blue-400 bg-blue-50" : "border-slate-200 bg-white"}`}>
+              <div className="flex items-center gap-2">
+                <span className="text-slate-500 font-bold text-lg">$</span>
+                <input
+                  type="number"
+                  min={50}
+                  max={50000}
+                  placeholder="500"
+                  value={customBudgetAmount}
+                  onChange={(e) => {
+                    setCustomBudgetAmount(e.target.value);
+                    setFormData({ ...formData, budget: e.target.value ? `$${e.target.value}` : "" });
+                  }}
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg font-semibold"
+                />
+              </div>
+              <input
+                type="range"
+                min={50}
+                max={10000}
+                step={50}
+                value={customBudgetAmount ? Number(customBudgetAmount) : 500}
+                onChange={(e) => {
+                  setCustomBudgetAmount(e.target.value);
+                  setFormData({ ...formData, budget: `$${e.target.value}` });
+                }}
+                className="w-full accent-blue-600 cursor-pointer"
+              />
+              <div className="flex justify-between text-xs text-slate-400">
+                <span>$50</span>
+                <span className="font-semibold text-blue-600">{customBudgetAmount ? `$${Number(customBudgetAmount).toLocaleString()}` : ""}</span>
+                <span>$10,000</span>
+              </div>
+            </div>
           </div>
         );
+      }
 
       case 5:
         const hotelOptions = [
@@ -1028,11 +1133,68 @@ export function CustomPackagePage() {
     }
   };
 
+  if (!planSelected) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-cyan-100 py-12 relative overflow-hidden">
+        <div className="pointer-events-none absolute right-0 top-16 h-72 w-72 rounded-full bg-cyan-200/30 blur-3xl" />
+        <div className="pointer-events-none absolute left-0 bottom-24 h-64 w-64 rounded-full bg-blue-200/30 blur-3xl" />
+        <div className="container mx-auto px-4 max-w-4xl relative">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-5 py-2 rounded-full mb-4 shadow-lg text-sm font-semibold">
+              <Sparkles className="w-4 h-4" />
+              Tur Yaratish
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold mb-3">Tur rejangizni tanlang</h1>
+            <p className="text-slate-500">Tayyor rejadan birini tanlang va o'zingizga moslashtiring</p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-5">
+            {planTemplates.map((plan) => (
+              <motion.button
+                key={plan.id}
+                onClick={() => selectPlan(plan)}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileHover={{ y: -4 }}
+                className={`text-left rounded-[2rem] border p-6 shadow-sm transition-all hover:shadow-xl bg-white border-slate-200 ${
+                  plan.id === "custom" ? "border-dashed border-blue-300 bg-blue-50/50" : ""
+                }`}
+              >
+                <div className="text-4xl mb-3">{plan.emoji}</div>
+                <h3 className="font-bold text-lg mb-1">{plan.title}</h3>
+                <p className="text-slate-500 text-sm mb-4">{plan.description}</p>
+                <div className="flex flex-wrap gap-2">
+                  {plan.tags.map((tag) => (
+                    <span key={tag} className="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-medium">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+                <div className="mt-4 flex items-center gap-1 text-blue-600 font-semibold text-sm">
+                  Tanlash <ArrowRight className="w-4 h-4" />
+                </div>
+              </motion.button>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-sky-50 to-cyan-100 py-12 relative overflow-hidden">
       <div className="pointer-events-none absolute right-0 top-16 h-72 w-72 rounded-full bg-cyan-200/30 blur-3xl"></div>
       <div className="pointer-events-none absolute left-0 bottom-24 h-64 w-64 rounded-full bg-blue-200/30 blur-3xl"></div>
       <div className="container mx-auto px-4 max-w-4xl relative">
+        <div className="mb-4">
+          <button
+            onClick={() => setPlanSelected(false)}
+            className="flex items-center gap-2 text-slate-500 hover:text-slate-800 text-sm transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" /> Rejalar ro'yxatiga qaytish
+          </button>
+        </div>
+
         <div className="text-center mb-8 md:mb-12">
           <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-4 sm:px-6 py-2 rounded-full mb-4 shadow-lg shadow-cyan-200/40 text-sm sm:text-base">
             <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
