@@ -1,6 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
+import { useAuth } from "../contexts/AuthContext";
+import { LoginModal } from "../components/LoginModal";
 import { motion } from "motion/react";
 import {
   Sparkles,
@@ -27,6 +29,8 @@ export function CustomPackagePage() {
   const [aiRecommendation, setAiRecommendation] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState("");
+  const { user } = useAuth();
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const [planSelected, setPlanSelected] = useState(false);
   const [customBudgetAmount, setCustomBudgetAmount] = useState("");
   const [itinerary, setItinerary] = useState<null | { title: string; days: { day: number; title: string; items: { time: string; type: string; place: string; note?: string; dish?: string }[] }[] }>(null);
@@ -410,6 +414,7 @@ export function CustomPackagePage() {
   };
 
   const handleGenerateCustomPackage = () => {
+    if (!user) { setShowLoginModal(true); return; }
     setItineraryLoading(true);
     setItineraryError("");
     setItinerary(null);
@@ -1251,6 +1256,7 @@ export function CustomPackagePage() {
               <ArrowLeft className="w-5 h-5" /> Yangi tur yaratish
             </button>
           </div>
+          <LoginModal open={showLoginModal} onClose={() => setShowLoginModal(false)} onSuccess={handleGenerateCustomPackage} />
         </div>
       </div>
     );
@@ -1411,6 +1417,7 @@ export function CustomPackagePage() {
           )}
         </div>
       </div>
+      <LoginModal open={showLoginModal} onClose={() => setShowLoginModal(false)} onSuccess={handleGenerateCustomPackage} />
     </div>
   );
 }

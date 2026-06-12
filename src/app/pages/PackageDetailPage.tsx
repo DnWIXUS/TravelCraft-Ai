@@ -3,6 +3,8 @@ import { useNavigate, useParams, Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { CalendarDays, CheckCircle2, ArrowLeft, Star } from "lucide-react";
 import { getPackageBySlug, PackageType } from "../data/packages";
+import { useAuth } from "../contexts/AuthContext";
+import { LoginModal } from "../components/LoginModal";
 
 interface BookingItem {
   id: number;
@@ -20,6 +22,8 @@ export function PackageDetailPage() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const lang = i18n.language as "uz" | "ru";
+  const { user } = useAuth();
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [packageData, setPackageData] = useState<ReturnType<typeof getPackageBySlug> | null>(null);
   const [name, setName] = useState("");
@@ -51,6 +55,7 @@ export function PackageDetailPage() {
 
   const handleBooking = () => {
     if (!packageData) return;
+    if (!user) { setShowLoginModal(true); return; }
     if (!name.trim() || !phone.trim()) {
       setMessage(t("detail.enterNamePhone"));
       return;
@@ -289,6 +294,11 @@ export function PackageDetailPage() {
           </div>
         </aside>
       </div>
+      <LoginModal
+        open={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onSuccess={handleBooking}
+      />
     </div>
   );
 }
